@@ -1,0 +1,8 @@
+# Read about how to use .gitignore: https://help.github.com/articles/ignoring-files
+
+manifest
+public
+
+node_modules
+.idea
+.DS_Store
