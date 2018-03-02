@@ -108,6 +108,10 @@ gulp.task('html', function() {
     '!frontend/_head.html'
   ])
     .pipe($.include())
+    .pipe($.htmlmin({
+      collapseWhitespace: true,
+      processConditionalComments: true
+    }))
     .pipe(gulp.dest('public'));
 });
 
