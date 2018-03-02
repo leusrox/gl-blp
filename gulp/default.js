@@ -36,8 +36,15 @@ gulp.task('vendor',
 gulp.task('public-scripts', function() {
   $.fancyLog("-> Building scripts");
 
+  const f = $.filter(['frontend/js/*.js', '!frontend/js/vendor.js'], {restore: true});
+
   if (public) {
     return gulp.src(["frontend/js/*.js"])
+      .pipe(f)
+      .pipe($.babel({
+        presets: ['env']
+      }))
+      .pipe(f.restore)
       .pipe($.uglify())
       .pipe($.rev())
       .pipe(gulp.dest("public/js/"))
