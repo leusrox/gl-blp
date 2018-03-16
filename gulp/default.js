@@ -6,6 +6,26 @@ const gulp = require("gulp"),
 
 let public = true;
 
+// Build Sprite
+
+gulp.task('sprite', function() {
+  return gulp.src('frontend/images/icon/ui/sprite/*.svg')
+    .pipe($.svgSprites(
+        {
+          common: "svg-sp",
+          selector: "svg-sp_%f",
+          preview: false,
+          svg: {
+            sprite: "sprite.svg"
+          },
+          svgPath: "../images/icon/ui/sprite.svg",
+          pngPath: "",
+          cssFile: "sprite.css"
+        }
+    ))
+    .pipe($.if('*.css', gulp.dest('frontend/css/'), gulp.dest('frontend/images/icon/ui/')));
+});
+
 // Build Scripts
 
 gulp.task('clean-vendor', function() {
@@ -141,6 +161,7 @@ gulp.task('build-public',
     'clean-public',
     'vendor',
     'public-scripts',
+    'sprite',
     gulp.parallel('public-styles', 'html', 'assets'),
     'manifest'
   )
@@ -166,6 +187,7 @@ gulp.task('watch', function() {
   ], gulp.series('public-scripts'));
   gulp.watch('frontend/css/**', gulp.series('public-styles'));
   gulp.watch('frontend/*.html', gulp.series('html'));
+  gulp.watch('frontend/images/icon/ui/sprite', gulp.series('sprite'));
   gulp.watch([
     'frontend/**',
     '!frontend/*.html',
