@@ -1,30 +1,15 @@
-const gulp = require("gulp"),
-      $ = require("gulp-load-plugins")({
-        pattern: ["*"],
-        scope: ["devDependencies"]
+const gulp = require('gulp'),
+      $ = require('gulp-load-plugins')({
+        pattern: ['*'],
+        scope: ['devDependencies']
       });
 
-let public = true;
+const isPublic = process.env.NODE_ENV ? process.env.NODE_ENV.trim() == 'production' : false;
 
-// Build Sprite
+function getTask(task) {
+  return require('./' + task)(gulp, $);
+}
 
-gulp.task('sprite', function() {
-  return gulp.src('frontend/images/icon/ui/sprite/*.svg')
-    .pipe($.svgSprites(
-        {
-          common: "svg-sp",
-          selector: "svg-sp_%f",
-          preview: false,
-          svg: {
-            sprite: "sprite.svg"
-          },
-          svgPath: "../images/icon/ui/sprite.svg",
-          pngPath: "",
-          cssFile: "sprite.css"
-        }
-    ))
-    .pipe($.if('*.css', gulp.dest('frontend/css/'), gulp.dest('frontend/images/icon/ui/')));
-});
 
 // Build Scripts
 
@@ -35,7 +20,7 @@ gulp.task('clean-vendor', function() {
 });
 
 gulp.task('js-vendor', function() {
-  $.fancyLog("-> Building vendor");
+  $.fancyLog('-> Building vendor');
 
   return gulp.src([
     'frontend/js/vendor/**'
@@ -51,15 +36,18 @@ gulp.task('vendor',
   )
 );
 
+
 // Public Scripts
 
 gulp.task('public-scripts', function() {
-  $.fancyLog("-> Building scripts");
+  $.fancyLog('-> Building scripts');
 
   const f = $.filter(['frontend/js/*.js', '!frontend/js/vendor.js'], {restore: true});
 
-  if (public) {
-    return gulp.src(["frontend/js/*.js"])
+  if (isPublic) {
+    return gulp.src([
+      'frontend/js/*.js'
+    ])
       .pipe(f)
       .pipe($.babel({
         presets: ['env']
@@ -67,21 +55,24 @@ gulp.task('public-scripts', function() {
       .pipe(f.restore)
       .pipe($.uglify())
       .pipe($.rev())
-      .pipe(gulp.dest("public/js/"))
+      .pipe(gulp.dest('public/js/'))
       .pipe($.rev.manifest())
-      .pipe(gulp.dest("manifest"))
+      .pipe(gulp.dest('manifest'))
   } else {
-    return gulp.src(["frontend/js/*.js"])
-      .pipe(gulp.dest("public/js/"))
+    return gulp.src([
+      'frontend/js/*.js'
+    ])
+      .pipe(gulp.dest('public/js/'))
   }
 });
+
 
 // Public Styles
 
 gulp.task('public-styles', function() {
-  $.fancyLog("-> Building styles");
+  $.fancyLog('-> Building styles');
 
-  if (public) {
+  if (isPublic) {
     return gulp.src('frontend/css/main.css')
       .pipe($.cleanCss())
       .pipe($.autoprefixer({
@@ -102,41 +93,39 @@ gulp.task('public-styles', function() {
   }
 });
 
+
 // Manifest
 
 gulp.task('manifest', function(done) {
-  if (public) {
-    $.fancyLog("-> Manifest");
+  $.fancyLog('-> Manifest');
 
-    const manifest = gulp.src("manifest/rev-manifest.json");
+  const manifest = gulp.src('manifest/rev-manifest.json');
 
-    return gulp.src("public/*.html")
-      .pipe($.revReplace({manifest: manifest, replaceInExtensions: ['.html']}))
-      .pipe(gulp.dest("public"));
-  } else {
-    done();
-  }
+  return gulp.src('public/*.html')
+    .pipe($.if(isPublic, $.revReplace({manifest: manifest, replaceInExtensions: ['.html']})))
+    .pipe(gulp.dest('public'));
 });
+
 
 // HTML & Assets
 
 gulp.task('html', function() {
-  $.fancyLog("-> Copy html");
+  $.fancyLog('-> Copy html');
 
   return gulp.src([
     'frontend/*.html',
     '!frontend/_head.html'
   ])
     .pipe($.include())
-    .pipe($.htmlmin({
+    .pipe($.if(isPublic, $.htmlmin({
       collapseWhitespace: true,
       processConditionalComments: true
-    }))
+    })))
     .pipe(gulp.dest('public'));
 });
 
 gulp.task('assets', function() {
-  $.fancyLog("-> Copy assets");
+  $.fancyLog('-> Copy assets');
 
   return gulp.src([
     'frontend/**',
@@ -148,10 +137,11 @@ gulp.task('assets', function() {
     .pipe(gulp.dest('public'));
 });
 
+
 // Clean & Build Public
 
 gulp.task('clean-public', function() {
-  $.fancyLog("-> Clean");
+  $.fancyLog('-> Clean');
 
   return $.del('public');
 });
@@ -161,33 +151,38 @@ gulp.task('build-public',
     'clean-public',
     'vendor',
     'public-scripts',
-    'sprite',
+    getTask('sprite'),
     gulp.parallel('public-styles', 'html', 'assets'),
     'manifest'
   )
 );
 
-gulp.task('public', function(done) {
-  done();
+gulp.task('public', function(cb) {
+  $.fancyLog('-> Start ' + process.env.NODE_ENV.trim());
 
-  public = true;
-
-  gulp.series('build-public')();
+  if (isPublic) {
+    gulp.series('build-public')(cb);
+  } else {
+    gulp.series(
+      'build-public',
+      gulp.parallel('watch', 'server')
+    )(cb);
+  }
 });
 
-// Dev
+
+// Watch
 
 gulp.task('watch', function() {
-  $.fancyLog("-> Run watch");
+  $.fancyLog('-> Run watch');
 
   gulp.watch('frontend/js/vendor/**', gulp.series('vendor'));
-  gulp.watch([
-    'frontend/js/**',
-    '!frontend/js/vendor/**'
-  ], gulp.series('public-scripts'));
+  gulp.watch(['frontend/js/**', '!frontend/js/vendor/**'], gulp.series('public-scripts'));
+  
   gulp.watch('frontend/css/**', gulp.series('public-styles'));
   gulp.watch('frontend/*.html', gulp.series('html'));
-  gulp.watch('frontend/images/icon/ui/sprite', gulp.series('sprite'));
+  gulp.watch('frontend/images/icon/ui/sprite', gulp.series(getTask('sprite')));
+  
   gulp.watch([
     'frontend/**',
     '!frontend/*.html',
@@ -200,19 +195,9 @@ gulp.task('server', function() {
   $.browserSync.init({
     server: {
       baseDir: 'public/'
-    }
+    },
+    open: false
   })
 
   $.browserSync.watch('public/**/*.*').on('change', $.browserSync.reload);
-});
-
-gulp.task('dev', function(done) {
-  done();
-
-  public = false;
-
-  gulp.series(
-    'build-public',
-    gulp.parallel('watch', 'server')
-  )();
 });

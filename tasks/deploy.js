@@ -1,7 +1,7 @@
-const gulp = require("gulp"),
-      $ = require("gulp-load-plugins")({
-        pattern: ["*"],
-        scope: ["devDependencies"]
+const gulp = require('gulp'),
+      $ = require('gulp-load-plugins')({
+        pattern: ['*'],
+        scope: ['devDependencies']
       });
 
 require('dotenv').config({path: './.env'})

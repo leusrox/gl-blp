@@ -1,0 +1,20 @@
+.svg-sp {
+    font-size: 10px;
+}
+
+.svg-sp:before {
+    content:' ';
+    vertical-align:middle;
+    display: inline-block;
+    background-image: url("../images/icon/ui/sprite.svg");
+    background-repeat: no-repeat;
+    background-size: 0em 0em;
+}
+
+.no-svg .svg-sp:before {
+    background-image: url("");
+}
+
+
+
+
