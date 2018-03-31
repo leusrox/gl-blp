@@ -73,8 +73,10 @@ gulp.task('public-styles', function() {
   $.fancyLog('-> Building styles');
 
   if (isPublic) {
-    return gulp.src('frontend/css/main.css')
-      .pipe($.cleanCss())
+    return gulp.src('frontend/css/main.sass')
+      .pipe($.sass({ 
+        outputStyle: 'compressed' 
+      }).on('error', $.sass.logError))
       .pipe($.autoprefixer({
         browsers: ['last 2 versions'],
         cascade: false
@@ -87,8 +89,10 @@ gulp.task('public-styles', function() {
       }))
       .pipe(gulp.dest('manifest'));
   } else {
-    return gulp.src('frontend/css/main.css')
-      .pipe($.cleanCss())
+    return gulp.src('frontend/css/main.sass')
+      .pipe($.sass({ 
+        outputStyle: 'compressed' 
+      }).on('error', $.sass.logError))
       .pipe(gulp.dest('public/css/'))
   }
 });
@@ -112,16 +116,11 @@ gulp.task('manifest', function(done) {
 gulp.task('html', function() {
   $.fancyLog('-> Copy html');
 
-  return gulp.src([
-    'frontend/*.html',
-    '!frontend/_head.html'
-  ])
-    .pipe($.include())
-    .pipe($.if(isPublic, $.htmlmin({
-      collapseWhitespace: true,
-      processConditionalComments: true
-    })))
-    .pipe(gulp.dest('public'));
+  return gulp.src('frontend/*.pug')
+  .pipe($.pug({
+    pretty: true
+  }))
+  .pipe(gulp.dest('public'));
 });
 
 gulp.task('assets', function() {
@@ -129,7 +128,8 @@ gulp.task('assets', function() {
 
   return gulp.src([
     'frontend/**',
-    '!frontend/*.html',
+    '!frontend/blocks/**',
+    '!frontend/*.pug',
     '!frontend/js/**',
     '!frontend/css/**',
   ])
@@ -180,12 +180,13 @@ gulp.task('watch', function() {
   gulp.watch(['frontend/js/**', '!frontend/js/vendor/**'], gulp.series('public-scripts'));
   
   gulp.watch('frontend/css/**', gulp.series('public-styles'));
-  gulp.watch('frontend/*.html', gulp.series('html'));
+  gulp.watch('frontend/*.pug', gulp.series('html'));
   gulp.watch('frontend/images/icon/ui/sprite', gulp.series(getTask('sprite')));
   
   gulp.watch([
     'frontend/**',
-    '!frontend/*.html',
+    '!frontend/blocks/**',
+    '!frontend/*.pug',
     '!frontend/js/**',
     '!frontend/css/**',
   ], gulp.series('assets'));

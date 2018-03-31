@@ -17,9 +17,9 @@ module.exports = function (gulp, plugins) {
             },
             svgPath: '../images/icon/ui/sprite.svg',
             pngPath: '',
-            cssFile: 'sprite.css'
+            cssFile: 'sprite.scss'
           }
       ))
-      .pipe($.if('*.css', gulp.dest('frontend/css/'), gulp.dest('frontend/images/icon/ui/')));
+      .pipe($.if('*.scss', gulp.dest('frontend/css/'), gulp.dest('frontend/images/icon/ui/')));
   }
 };
