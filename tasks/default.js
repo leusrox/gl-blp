@@ -11,7 +11,7 @@ function getTask(task) {
 }
 
 
-// Build Scripts
+// Build Vendor
 
 gulp.task('clean-vendor', function() {
   return $.del([
@@ -26,7 +26,7 @@ gulp.task('js-vendor', function() {
     'frontend/js/vendor/**'
   ])
     .pipe($.concat('vendor.js'))
-    .pipe(gulp.dest('frontend/js'));
+    .pipe(gulp.dest('frontend/js/'));
 });
 
 gulp.task('vendor', 
@@ -103,7 +103,7 @@ gulp.task('public-styles', function() {
 gulp.task('manifest', function(done) {
   $.fancyLog('-> Manifest');
 
-  const manifest = gulp.src('manifest/rev-manifest.json');
+  const manifest = isPublic ? gulp.src('manifest/rev-manifest.json') : '';
 
   return gulp.src('public/*.html')
     .pipe($.if(isPublic, $.revReplace({manifest: manifest, replaceInExtensions: ['.html']})))
@@ -127,14 +127,10 @@ gulp.task('assets', function() {
   $.fancyLog('-> Copy assets');
 
   return gulp.src([
-    'frontend/**',
-    '!frontend/blocks/**',
-    '!frontend/*.pug',
-    '!frontend/js/**',
-    '!frontend/css/**',
+    'frontend/assets/**'
   ])
     .pipe($.cached('assets'))
-    .pipe(gulp.dest('public'));
+    .pipe(gulp.dest('public/assets/'));
 });
 
 
@@ -181,15 +177,9 @@ gulp.task('watch', function() {
   
   gulp.watch('frontend/css/**', gulp.series('public-styles'));
   gulp.watch('frontend/*.pug', gulp.series('html'));
-  gulp.watch('frontend/images/icon/ui/sprite', gulp.series(getTask('sprite')));
+  gulp.watch('frontend/assets/images/icon/ui/sprite/**', gulp.series(getTask('sprite')));
   
-  gulp.watch([
-    'frontend/**',
-    '!frontend/blocks/**',
-    '!frontend/*.pug',
-    '!frontend/js/**',
-    '!frontend/css/**',
-  ], gulp.series('assets'));
+  gulp.watch('frontend/assets/**', gulp.series('assets'));
 });
 
 gulp.task('server', function() {

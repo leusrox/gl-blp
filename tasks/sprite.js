@@ -5,8 +5,8 @@ const gulp = require('gulp'),
       });
 
 module.exports = function (gulp, plugins) {
-  return function () { 
-    return gulp.src('frontend/images/icon/ui/sprite/*.svg')
+  return function sprite() { 
+    return gulp.src('frontend/assets/images/icon/ui/sprite/*.svg')
       .pipe($.svgSprites(
           {
             common: 'svg-sp',
@@ -15,11 +15,11 @@ module.exports = function (gulp, plugins) {
             svg: {
               sprite: 'sprite.svg'
             },
-            svgPath: '../images/icon/ui/sprite.svg',
+            svgPath: '../assets/images/icon/ui/sprite.svg',
             pngPath: '',
             cssFile: 'sprite.scss'
           }
       ))
-      .pipe($.if('*.scss', gulp.dest('frontend/css/'), gulp.dest('frontend/images/icon/ui/')));
+      .pipe($.if('*.scss', gulp.dest('frontend/css/'), gulp.dest('frontend/assets/images/icon/ui/')));
   }
 };

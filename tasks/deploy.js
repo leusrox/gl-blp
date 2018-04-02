@@ -39,7 +39,7 @@ gulp.task('deploy-public', function() {
 gulp.task('deploy',  gulp.series('deploy-manifest', 'deploy-public'));
 
 
-// Remove FTP
+// Remove
 
 gulp.task('d-deploy-manifest', function(cb) {
   ftpConn.rmdir(ftpPath + 'manifest', cb);
