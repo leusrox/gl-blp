@@ -90,9 +90,10 @@ gulp.task('public-styles', function() {
       .pipe(gulp.dest('manifest'));
   } else {
     return gulp.src('frontend/css/main.sass')
-      .pipe($.sass({ 
-        outputStyle: 'compressed' 
-      }).on('error', $.sass.logError))
+      .pipe($.plumber())
+      .pipe($.sourcemaps.init())
+      .pipe($.sass().on('error', $.sass.logError))
+      .pipe($.sourcemaps.write())
       .pipe(gulp.dest('public/css/'))
   }
 });
@@ -146,8 +147,7 @@ gulp.task('build-public',
   gulp.series(
     'clean-public',
     'vendor',
-    'public-scripts',
-    getTask('sprite'),
+    gulp.parallel('public-scripts', getTask('sprite')),
     gulp.parallel('public-styles', 'html', 'assets'),
     'manifest'
   )
